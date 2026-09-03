@@ -72,8 +72,8 @@ class AppIntegration {
                 this.ui.setPlayState(false);
 
                 // If remote peer requested snapshot on pause, capture webcam frame
-                if (msg.requestSnapshot) {
-                    const frame = this.snapshot.captureFrame();
+                if (msg.requestSnapshot && this.snapshot.isCameraActive()) {
+                    const frame = this.snapshot.captureSnapshot();
                     if (frame) {
                         const snapMsg = createSnapshotMessage(frame);
                         this.session.sendMessage(snapMsg);

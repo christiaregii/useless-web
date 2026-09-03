@@ -175,12 +175,8 @@ class VideoController {
         if (promise) {
             promise.catch((err) => {
                 console.warn('[VideoController] Autoplay error on remote play:', err);
-            }).finally(() => {
-                // Clear guard after microtask
-                setTimeout(() => { this.isRemoteCommand = false; }, 60);
+                this.isRemoteCommand = false;
             });
-        } else {
-            setTimeout(() => { this.isRemoteCommand = false; }, 60);
         }
     }
 
@@ -190,7 +186,6 @@ class VideoController {
             this.video.currentTime = timestamp;
         }
         this.video.pause();
-        setTimeout(() => { this.isRemoteCommand = false; }, 60);
     }
 
     seekFromRemote(timestamp) {
@@ -198,14 +193,12 @@ class VideoController {
         if (typeof timestamp === 'number') {
             this.video.currentTime = timestamp;
         }
-        setTimeout(() => { this.isRemoteCommand = false; }, 60);
     }
 
     correctDrift(targetTimestamp) {
         this.isRemoteCommand = true;
         console.log(`[VideoController] Correcting drift: adjusting time to ${targetTimestamp.toFixed(2)}s`);
         this.video.currentTime = targetTimestamp;
-        setTimeout(() => { this.isRemoteCommand = false; }, 60);
     }
 
     /**
