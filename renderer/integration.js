@@ -237,6 +237,23 @@ class AppIntegration {
             }
         });
 
+        // Local Test Snapshot button (Requirement 4 & 5: capture and display locally)
+        if (this.ui.btnTestSnapshot) {
+            this.ui.btnTestSnapshot.addEventListener('click', () => {
+                if (!this.snapshot.isCameraActive()) {
+                    this.ui.showToast('Please enable Reaction Cam first!', 'warning');
+                    return;
+                }
+                const snap = this.snapshot.captureSnapshot(true);
+                if (snap) {
+                    this.ui.showReactionPopup(snap, 'Local Test Snapshot', 'Captured from your webcam');
+                    this.ui.showToast('Local snapshot captured successfully!', 'success');
+                } else {
+                    this.ui.showToast('Camera frame not ready yet, try again', 'warning');
+                }
+            });
+        }
+
         // Ready button toggle
         this.ui.btnReady.addEventListener('click', () => {
             if (!window.appState.isMovieLoaded()) {

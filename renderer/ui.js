@@ -17,6 +17,7 @@ class UIManager {
         this.btnOpenConnect = document.getElementById('btn-open-connect');
         this.btnReady = document.getElementById('btn-ready');
         this.btnCamera = document.getElementById('btn-camera');
+        this.btnTestSnapshot = document.getElementById('btn-test-snapshot');
         this.cameraDot = document.getElementById('camera-status-dot');
         this.syncBadge = document.getElementById('sync-status-badge');
 
@@ -78,6 +79,8 @@ class UIManager {
         this.countdownNumber = document.getElementById('countdown-number');
         this.reactionPopup = document.getElementById('reaction-popup');
         this.reactionImage = document.getElementById('reaction-image');
+        this.reactionTitleText = document.getElementById('reaction-title-text');
+        this.reactionCaption = document.getElementById('reaction-caption');
         this.btnReactionClose = document.getElementById('btn-reaction-close');
         this.toastContainer = document.getElementById('toast-container');
     }
@@ -297,8 +300,14 @@ class UIManager {
         this.countdownOverlay.classList.add('hidden');
     }
 
-    showReactionPopup(imageData) {
+    showReactionPopup(imageData, title = 'Partner Reaction', caption = 'Captured when playback paused') {
         this.reactionImage.src = imageData;
+        if (this.reactionTitleText) {
+            this.reactionTitleText.textContent = title;
+        }
+        if (this.reactionCaption) {
+            this.reactionCaption.textContent = caption;
+        }
         this.reactionPopup.classList.remove('hidden');
         this.reactionPopup.classList.add('popup-in');
 
