@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; media-src 'self' blob: file:; img-src 'self' data: blob:;">
+    <title>Watch Party — Two-Person Synced Cinema</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-root">
+        <!-- Top App Bar -->
+        <header id="top-bar">
+            <div class="brand-container">
+                <div class="brand-logo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">WATCH PARTY</span>
+                    <span class="brand-sub">Direct P2P Cinema</span>
+                </div>
+            </div>
+
+            <!-- Central Indicators -->
+            <div class="center-controls">
+                <div id="connection-status-badge" class="status-pill disconnected">
+                    <span id="connection-status-dot" class="dot"></span>
+                    <span id="connection-status-text">Disconnected</span>
+                </div>
+
+                <div id="sync-status-badge" class="sync-pill hidden">
+                    Sync: 0ms
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="header-actions">
+                <button id="btn-camera" class="action-btn" title="Toggle Reaction Camera (Explicit Consent)">
+                    <span id="camera-status-dot" class="cam-dot"></span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span>Reaction Cam</span>
+                </button>
+
+                <button id="btn-ready" class="action-btn ready-btn" title="Signal Ready to Watch">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Set Ready</span>
+                </button>
+
+                <button id="btn-open-connect" class="action-btn connect-btn">
+                    Connect Peer
+                </button>
+            </div>
+        </header>
+
+        <!-- Movie Metadata Status Bar -->
+        <div id="movie-meta-bar" class="hidden">
+            <div class="meta-section">
+                <span class="meta-label">You:</span>
+                <span id="local-movie-name" class="meta-value">None</span>
+            </div>
+            <div id="movie-match-badge" class="match-badge match-neutral">
+                Local Only
+            </div>
+            <div class="meta-section">
+                <span class="meta-label">Partner:</span>
+                <span id="partner-movie-name" class="meta-value">Waiting for peer...</span>
+            </div>
+        </div>
+
+        <!-- Main Video Theater Stage -->
+        <main id="main-stage">
+            <!-- Empty State Dropzone -->
+            <div id="empty-dropzone" class="dropzone">
+                <div class="dropzone-content">
+                    <div class="dropzone-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <line x1="2" y1="7" x2="7" y2="7"></line>
+                            <line x1="2" y1="17" x2="7" y2="17"></line>
+                            <line x1="17" y1="17" x2="22" y2="17"></line>
+                            <line x1="17" y1="7" x2="22" y2="7"></line>
+                        </svg>
+                    </div>
+                    <h2>Select Local Movie File</h2>
+                    <p>Load your local copy of the movie. Both peers load their own copy—the video is NEVER streamed or uploaded.</p>
+                    <button id="btn-select-file" class="btn-primary">
+                        Browse Video File
+                    </button>
+                    <input type="file" id="file-input-hidden" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska" style="display: none;">
+                    <span class="dropzone-hint">Or drag and drop your video file here (MP4, WebM, MKV)</span>
+                </div>
+            </div>
+
+            <!-- Video Player Theater Container -->
+            <div id="theater-container" class="theater hidden">
+                <!-- Video Loading Indicator -->
+                <div id="video-loading" class="video-loading-overlay hidden">
+                    <div class="spinner"></div>
+                    <span>Loading Video...</span>
+                </div>
+
+                <!-- Video Error State Overlay -->
+                <div id="video-error" class="video-error-overlay hidden">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span id="video-error-text">Unable to play video format</span>
+                    <button id="btn-retry-file" class="btn-secondary">Choose Another File</button>
+                </div>
+
+                <video id="video-element" playsinline preload="metadata"></video>
+
+                <!-- Custom Overlay Player Controls -->
+                <div id="video-controls" class="controls-overlay">
+                    <!-- Progress Scrubber -->
+                    <div class="timeline-container">
+                        <div class="timeline-track">
+                            <div id="timeline-progress" class="timeline-fill"></div>
+                        </div>
+                        <input type="range" id="timeline-scrubber" min="0" max="100" step="0.05" value="0">
+                    </div>
+
+                    <div class="controls-bottom">
+                        <div class="controls-left">
+                            <button id="btn-play-pause" class="ctrl-icon-btn" title="Play / Pause">
+                                <svg id="icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <svg id="icon-pause" class="hidden" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="6" y="4" width="4" height="16"></rect>
+                                    <rect x="14" y="4" width="4" height="16"></rect>
+                                </svg>
+                            </button>
+
+                            <div class="time-display">
+                                <span id="time-current">00:00</span>
+                                <span class="time-sep">/</span>
+                                <span id="time-duration">00:00</span>
+                            </div>
+                        </div>
+
+                        <div class="controls-right">
+                            <div class="volume-container">
+                                <button id="btn-volume" class="ctrl-icon-btn" title="Mute / Unmute">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    </svg>
+                                </button>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1">
+                            </div>
+
+                            <button id="btn-fullscreen" class="ctrl-icon-btn" title="Toggle Fullscreen">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 3-2-1 Synchronized Countdown Overlay -->
+        <div id="countdown-overlay" class="countdown-backdrop hidden">
+            <div id="countdown-number" class="countdown-text">3</div>
+        </div>
+
+        <!-- Partner Reaction Snapshot Floating Card -->
+        <div id="reaction-popup" class="reaction-card hidden">
+            <div class="reaction-header">
+                <div class="reaction-title">
+                    <span class="live-dot"></span>
+                    <span>Partner Reaction</span>
+                </div>
+                <button id="btn-reaction-close" class="btn-close-sm">&times;</button>
+            </div>
+            <div class="reaction-body">
+                <img id="reaction-image" alt="Partner Reaction Webcam Snapshot" src="">
+            </div>
+            <div class="reaction-caption">Captured when playback paused</div>
+        </div>
+
+        <!-- Manual WebRTC Signaling Modal / Drawer -->
+        <div id="modal-signaling" class="modal-backdrop hidden">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Manual WebRTC P2P Signaling</h2>
+                    <button id="btn-close-signaling" class="btn-close">&times;</button>
+                </div>
+
+                <div class="tabs">
+                    <button id="tab-host" class="tab-btn active">Host Session (Peer A)</button>
+                    <button id="tab-guest" class="tab-btn">Join Session (Peer B)</button>
+                </div>
+
+                <!-- Host Flow Section -->
+                <div id="section-host" class="tab-section">
+                    <div class="step-card">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h3>Generate & Copy Your Host Offer</h3>
+                            <p>Creates your WebRTC offer and embeds your STUN ICE candidates.</p>
+                            <button id="btn-host-create" class="btn-primary">Generate Host Offer</button>
+                            <textarea id="host-offer-text" readonly placeholder="Click 'Generate Host Offer' to produce your session code..."></textarea>
+                            <button id="btn-host-copy-offer" class="btn-secondary">Copy Offer to Clipboard</button>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h3>Paste Partner's Answer Code</h3>
+                            <p>Paste the answer code returned from your partner to establish direct P2P.</p>
+                            <textarea id="host-answer-text" placeholder="Paste partner's Answer code here (starts with WP1:)..."></textarea>
+                            <button id="btn-host-accept-answer" class="btn-primary">Connect to Partner</button>
+                        </div>
+                    </div>
+                    <div id="host-status-msg" class="status-msg"></div>
+                </div>
+
+                <!-- Guest Flow Section -->
+                <div id="section-guest" class="tab-section hidden">
+                    <div class="step-card">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h3>Paste Host's Offer Code</h3>
+                            <p>Paste the session code received from the Host.</p>
+                            <textarea id="guest-offer-text" placeholder="Paste Host's Offer code here (starts with WP1:)..."></textarea>
+                            <button id="btn-guest-create-answer" class="btn-primary">Generate Answer Code</button>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h3>Copy Your Answer & Send to Host</h3>
+                            <p>Copy this answer code and send it back to the Host to complete P2P setup.</p>
+                            <textarea id="guest-answer-text" readonly placeholder="Click 'Generate Answer Code' above to produce your response code..."></textarea>
+                            <button id="btn-guest-copy-answer" class="btn-secondary">Copy Answer to Clipboard</button>
+                        </div>
+                    </div>
+                    <div id="guest-status-msg" class="status-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div id="toast-container" class="toasts"></div>
+    </div>
+
+    <!-- Application Script Module Bundles (Person B Network + Person A Media) -->
+    <script src="protocol.js"></script>
+    <script src="signaling.js"></script>
+    <script src="webrtc.js"></script>
+    <script src="syncEngine.js"></script>
+    <script src="sessionManager.js"></script>
+    <script src="state.js"></script>
+    <script src="videoController.js"></script>
+    <script src="snapshot.js"></script>
+    <script src="ui.js"></script>
+    <script src="integration.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
