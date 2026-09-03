@@ -4,7 +4,8 @@
   "description": "Two-person synchronized movie-watching application via P2P WebRTC",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "playwright test"
   },
   "keywords": [
     "webrtc",
@@ -15,6 +16,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "electron": "^31.0.0"
   }
 }

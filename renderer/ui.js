@@ -343,6 +343,11 @@ class UIManager {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.UIManager = UIManager;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { UIManager };

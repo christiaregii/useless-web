@@ -240,6 +240,11 @@ class VideoController {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.VideoController = VideoController;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { VideoController };

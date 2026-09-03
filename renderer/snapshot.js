@@ -171,6 +171,11 @@ class SnapshotManager {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.SnapshotManager = SnapshotManager;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { SnapshotManager, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT };

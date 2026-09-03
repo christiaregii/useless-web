@@ -144,6 +144,11 @@ class SyncEngine {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.SyncEngine = SyncEngine;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { SyncEngine, DRIFT_THRESHOLD_SECONDS, SYNC_INTERVAL_MS };

@@ -143,6 +143,11 @@ class SessionManager {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.SessionManager = SessionManager;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { SessionManager };

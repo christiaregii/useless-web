@@ -79,4 +79,12 @@ class AppState {
 }
 
 // Global instance in renderer
-window.appState = new AppState();
+if (typeof window !== 'undefined') {
+    window.AppState = AppState;
+    window.appState = new AppState();
+}
+
+// Export for module/browser usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AppState };
+}

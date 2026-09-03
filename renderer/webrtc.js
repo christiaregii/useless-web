@@ -197,7 +197,13 @@ class WebRTCManager {
     }
 }
 
+// Global browser exports
+if (typeof window !== 'undefined') {
+    window.WebRTCManager = WebRTCManager;
+    window.WebRTCConnection = WebRTCManager;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { WebRTCManager };
+    module.exports = { WebRTCManager, WebRTCConnection: WebRTCManager };
 }

@@ -107,6 +107,18 @@ function waitForIceGatheringComplete(pc, maxWaitMs = 2500) {
     });
 }
 
+// Global browser signaling object
+if (typeof window !== 'undefined') {
+    window.Signaling = {
+        SIGNAL_PREFIX,
+        packSignal,
+        unpackSignal,
+        encodeSignal: packSignal,
+        decodeSignal: unpackSignal,
+        waitForIceGatheringComplete
+    };
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

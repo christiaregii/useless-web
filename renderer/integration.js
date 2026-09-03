@@ -441,7 +441,13 @@ class AppIntegration {
     }
 }
 
+// Global browser instance
+if (typeof window !== 'undefined') {
+    window.AppIntegration = AppIntegration;
+    window.Integration = AppIntegration;
+}
+
 // Export for module/browser usage
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AppIntegration };
+    module.exports = { AppIntegration, Integration: AppIntegration };
 }

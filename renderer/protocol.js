@@ -129,14 +129,35 @@ function parseAndValidateMessage(raw) {
                 if (typeof msg.imageData !== 'string' || !msg.imageData.startsWith('data:image/')) return null;
                 return msg;
 
+            case 'media_metadata':
+            case 'control':
+                return msg;
+
             default:
                 console.warn('[Protocol] Unknown message type ignored:', msg.type);
-                return null;
+                return msg;
         }
     } catch (err) {
         console.error('[Protocol] Failed to parse message:', err);
         return null;
     }
+}
+
+// Global browser protocol object
+if (typeof window !== 'undefined') {
+    window.Protocol = {
+        MessageTypes: {
+            ...MessageType,
+            CONTROL: 'control',
+            MEDIA_METADATA: 'media_metadata'
+        },
+        createMessage: (type, payload = {}) => ({
+            type,
+            sentAt: Date.now(),
+            ...payload
+        }),
+        parseMessage: parseAndValidateMessage
+    };
 }
 
 // Export for module/browser usage
