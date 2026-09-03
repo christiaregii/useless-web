@@ -214,7 +214,10 @@ class VideoController {
     }
 
     seek(seconds) {
-        const target = Math.max(0, Math.min(this.video.duration || 0, seconds));
+        const dur = this.video.duration;
+        const target = (typeof dur === 'number' && !isNaN(dur) && dur > 0)
+            ? Math.max(0, Math.min(dur, seconds))
+            : Math.max(0, seconds);
         this.video.currentTime = target;
     }
 
@@ -237,6 +240,20 @@ class VideoController {
 
     isPlaying() {
         return !this.video.paused && !this.video.ended && this.video.readyState > 2;
+    }
+
+    cleanup() {
+        if (this.currentBlobUrl) {
+            try {
+                URL.revokeObjectURL(this.currentBlobUrl);
+            } catch (_) {}
+            this.currentBlobUrl = null;
+        }
+        if (this.video) {
+            this.video.pause();
+            this.video.removeAttribute('src');
+            this.video.load();
+        }
     }
 }
 

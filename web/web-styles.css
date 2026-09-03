@@ -1,0 +1,16 @@
+@import url('../renderer/styles.css');
+
+/* Web-specific additions or overrides */
+.web-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--radius-sm, 6px);
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-primary, #38bdf8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-left: 8px;
+    letter-spacing: 0.5px;
+}

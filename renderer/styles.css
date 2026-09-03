@@ -917,3 +917,18 @@ textarea:focus {
     border-color: rgba(56, 189, 248, 0.5);
     color: #7dd3fc;
 }
+
+/* ==========================================================================
+   Fullscreen Styles
+   ========================================================================== */
+.theater:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+}
+
+.theater:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+}

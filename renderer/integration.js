@@ -23,6 +23,14 @@ class AppIntegration {
             }
         );
 
+        // Connect media layer's captureSnapshot to SyncEngine
+        this.sync.captureSnapshot = () => {
+            if (this.snapshot && this.snapshot.isCameraActive()) {
+                return this.snapshot.captureSnapshot();
+            }
+            return null;
+        };
+
         this._setupNetworkEvents();
         this._setupVideoEvents();
         this._setupUIEvents();
@@ -62,34 +70,49 @@ class AppIntegration {
         switch (msg.type) {
             case MessageType.PLAY:
                 console.log('[Integration] Remote peer PLAY command at', msg.timestamp);
-                this.video.playFromRemote(msg.timestamp);
-                this.ui.setPlayState(true);
+                if (this.sync) {
+                    this.sync.handleRemoteMessage(msg);
+                } else {
+                    this.video.playFromRemote(msg.timestamp);
+                    this.ui.setPlayState(true);
+                }
                 break;
 
             case MessageType.PAUSE:
                 console.log('[Integration] Remote peer PAUSE command at', msg.timestamp);
-                this.video.pauseFromRemote(msg.timestamp);
-                this.ui.setPlayState(false);
+                if (this.sync) {
+                    this.sync.handleRemoteMessage(msg);
+                } else {
+                    this.video.pauseFromRemote(msg.timestamp);
+                    this.ui.setPlayState(false);
 
-                // If remote peer requested snapshot on pause, capture webcam frame
-                if (msg.requestSnapshot && this.snapshot.isCameraActive()) {
-                    const frame = this.snapshot.captureSnapshot();
-                    if (frame) {
-                        const snapMsg = createSnapshotMessage(frame);
-                        this.session.sendMessage(snapMsg);
+                    // Fallback if sync engine not present
+                    if (msg.requestSnapshot && this.snapshot.isCameraActive()) {
+                        const frame = this.snapshot.captureSnapshot();
+                        if (frame) {
+                            const snapMsg = createSnapshotMessage(frame);
+                            this.session.sendMessage(snapMsg);
+                        }
                     }
                 }
                 break;
 
             case MessageType.SEEK:
                 console.log('[Integration] Remote peer SEEK command to', msg.timestamp);
-                this.video.seekFromRemote(msg.timestamp);
-                this.ui.updateTimeline(msg.timestamp, this.video.getDuration());
+                if (this.sync) {
+                    this.sync.handleRemoteMessage(msg);
+                } else {
+                    this.video.seekFromRemote(msg.timestamp);
+                    this.ui.updateTimeline(msg.timestamp, this.video.getDuration());
+                }
                 break;
 
             case MessageType.READY:
                 console.log('[Integration] Remote peer READY status:', msg.isReady, msg.movieMeta);
                 window.appState.set('remoteReady', msg.isReady);
+                if (this.sync) {
+                    this.sync.handleRemoteMessage(msg);
+                }
                 if (msg.movieMeta) {
                     window.appState.set('remoteMovie', msg.movieMeta);
                 }
@@ -127,26 +150,31 @@ class AppIntegration {
     }
 
     _setupVideoEvents() {
-        // LOCAL PLAY: user clicked play button or keyboard spacebar
+        // LOCAL PLAY: route through SyncEngine to ensure loop prevention
         this.video.onLocalPlay = (timestamp) => {
             this.ui.setPlayState(true);
-            if (this.session.getConnectionState() === 'connected') {
+            if (this.sync) {
+                this.sync.localPlay(timestamp);
+            } else if (this.session.getConnectionState() === 'connected') {
                 this.session.sendMessage(createPlayMessage(timestamp));
             }
         };
 
-        // LOCAL PAUSE: user clicked pause button
+        // LOCAL PAUSE: route through SyncEngine to ensure loop prevention
         this.video.onLocalPause = (timestamp) => {
             this.ui.setPlayState(false);
-            if (this.session.getConnectionState() === 'connected') {
-                // When local user pauses, request snapshot from remote peer
+            if (this.sync) {
+                this.sync.localPause(timestamp, true);
+            } else if (this.session.getConnectionState() === 'connected') {
                 this.session.sendMessage(createPauseMessage(timestamp, true));
             }
         };
 
-        // LOCAL SEEK: user scrubbed timeline
+        // LOCAL SEEK: route through SyncEngine to utilize existing debounce & loop prevention
         this.video.onLocalSeek = (timestamp) => {
-            if (this.session.getConnectionState() === 'connected') {
+            if (this.sync) {
+                this.sync.localSeek(timestamp);
+            } else if (this.session.getConnectionState() === 'connected') {
                 this.session.sendMessage(createSeekMessage(timestamp));
             }
         };
@@ -270,6 +298,10 @@ class AppIntegration {
             if (this.session.getConnectionState() === 'connected') {
                 this.session.sendMessage(createReadyMessage(newReady, window.appState.get('localMovie')));
             }
+            if (this.sync) {
+                this.sync.localReady = newReady;
+                this.sync.checkBothReady();
+            }
 
             // Check if both ready
             if (newReady && window.appState.get('remoteReady') && window.appState.get('sessionRole') === 'host') {
@@ -360,6 +392,25 @@ class AppIntegration {
     }
 
     _setupSyncEvents() {
+        this.sync.onRemotePlay = (timestamp) => {
+            this.video.playFromRemote(timestamp);
+            this.ui.setPlayState(true);
+        };
+
+        this.sync.onRemotePause = (timestamp) => {
+            this.video.pauseFromRemote(timestamp);
+            this.ui.setPlayState(false);
+        };
+
+        this.sync.onRemoteSeek = (timestamp) => {
+            this.video.seekFromRemote(timestamp);
+            this.ui.updateTimeline(timestamp, this.video.getDuration());
+        };
+
+        this.sync.onDriftCorrection = (targetTimestamp, driftMs) => {
+            this.video.correctDrift(targetTimestamp);
+        };
+
         this.sync.onCountdownTick = (secondsLeft) => {
             this.ui.showCountdown(secondsLeft);
         };
@@ -383,6 +434,16 @@ class AppIntegration {
 
         this.video.onError = (errMsg) => {
             this.ui.showError(errMsg);
+        };
+
+        this.video.onLoadedMetadata = (duration) => {
+            const localMovie = window.appState.get('localMovie');
+            if (localMovie) {
+                this.ui.showMovieInfo(localMovie, window.appState.get('remoteMovie'));
+                if (this.session && this.session.getConnectionState() === 'connected') {
+                    this.session.sendMessage(createReadyMessage(window.appState.get('localReady'), localMovie));
+                }
+            }
         };
 
         // Retry / choose another file button
