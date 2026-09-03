@@ -1,0 +1,21 @@
+{
+  "name": "watch-party",
+  "version": "1.0.0",
+  "description": "Two-person synchronized movie-watching Electron app using direct WebRTC P2P",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "webrtc",
+    "electron",
+    "video-sync",
+    "p2p"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "electron": "^31.0.0"
+  }
+}

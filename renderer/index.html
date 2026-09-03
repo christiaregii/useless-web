@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Party — Synchronized P2P Movie Watching</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header with controls and live stats -->
+    <header class="app-header">
+      <div class="brand-section">
+        <span class="brand-icon">🍿</span>
+        <h1 class="app-title">Watch Party</h1>
+      </div>
+
+      <div class="status-section">
+        <span id="connection-status" class="badge badge-disconnected">DISCONNECTED</span>
+        <span id="drift-status" class="badge">Drift: 0ms</span>
+        <span id="local-file-status" class="badge badge-muted">Local: No File</span>
+        <span id="partner-file-status" class="badge badge-muted">Partner: No File</span>
+        <span id="partner-ready-status" class="badge badge-muted">Partner: NOT READY</span>
+      </div>
+
+      <div class="action-section">
+        <button id="btn-open-file" class="btn btn-secondary">
+          <span>📁</span> Select Movie
+        </button>
+        <button id="btn-camera-toggle" class="btn btn-secondary">
+          <span>📷</span> Enable Camera
+        </button>
+        <button id="btn-connect" class="btn btn-primary">
+          <span>🔗</span> Connect Peer
+        </button>
+        <button id="btn-ready" class="btn btn-secondary">
+          Set Ready
+        </button>
+      </div>
+    </header>
+
+    <!-- Main video display area -->
+    <main class="app-content">
+      <div class="video-wrapper">
+        <video id="main-video" controls playsinline></video>
+
+        <!-- Synchronized Countdown Overlay -->
+        <div id="countdown-overlay" class="countdown-overlay hidden">
+          <div id="countdown-text" class="countdown-number">3</div>
+          <div class="countdown-subtext">Synchronizing Playback...</div>
+        </div>
+
+        <!-- Temporary Partner Webcam Snapshot Popup -->
+        <div id="snapshot-overlay" class="snapshot-popup hidden">
+          <div class="snapshot-header">
+            <span class="snapshot-title">Partner Reaction (Paused)</span>
+            <button id="btn-close-snapshot" class="btn-icon">&times;</button>
+          </div>
+          <img id="partner-snapshot-img" alt="Partner webcam snapshot">
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- WebRTC Manual Signaling Modal -->
+  <div id="connection-modal" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>WebRTC Peer Connection</h2>
+        <button id="btn-close-modal" class="btn-icon">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Initial Role Selector -->
+        <div id="connect-choice" class="choice-grid">
+          <div id="btn-choose-host" class="choice-card">
+            <div class="choice-icon">👑</div>
+            <h3>Host Session</h3>
+            <p>Generate an offer code to send to your movie partner.</p>
+          </div>
+          <div id="btn-choose-guest" class="choice-card">
+            <div class="choice-icon">🎟️</div>
+            <h3>Join Session</h3>
+            <p>Paste your partner's offer code and generate an answer.</p>
+          </div>
+        </div>
+
+        <!-- Host Flow View -->
+        <div id="host-panel" class="hidden">
+          <div class="step-box">
+            <label class="step-label">Step 1: Copy your Offer code and send it to your partner</label>
+            <textarea id="host-offer-code" class="code-area" readonly></textarea>
+            <button id="btn-copy-offer" class="btn btn-secondary">📋 Copy Offer</button>
+          </div>
+          <div class="step-box">
+            <label class="step-label">Step 2: Paste the Answer code sent back by your partner</label>
+            <textarea id="host-answer-code" class="code-area" placeholder="Paste partner's answer code here..."></textarea>
+            <button id="btn-apply-answer" class="btn btn-primary">Connect to Partner</button>
+          </div>
+        </div>
+
+        <!-- Guest Flow View -->
+        <div id="guest-panel" class="hidden">
+          <div class="step-box">
+            <label class="step-label">Step 1: Paste the Host's Offer code below</label>
+            <textarea id="guest-offer-code" class="code-area" placeholder="Paste host's offer code here..."></textarea>
+            <button id="btn-generate-answer" class="btn btn-primary">Generate Answer</button>
+          </div>
+          <div id="guest-step-answer" class="step-box hidden">
+            <label class="step-label">Step 2: Copy your Answer code and send it back to the Host</label>
+            <textarea id="guest-answer-code" class="code-area" readonly></textarea>
+            <button id="btn-copy-answer" class="btn btn-secondary">📋 Copy Answer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts: Person B (Network/Sync) loaded first, followed by Person A (Media/UI) and Entry Point -->
+  <script src="protocol.js"></script>
+  <script src="signaling.js"></script>
+  <script src="webrtc.js"></script>
+  <script src="syncEngine.js"></script>
+  <script src="sessionManager.js"></script>
+
+  <script src="state.js"></script>
+  <script src="videoController.js"></script>
+  <script src="snapshot.js"></script>
+  <script src="ui.js"></script>
+  <script src="integration.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
